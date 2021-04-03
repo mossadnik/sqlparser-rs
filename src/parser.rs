@@ -2557,15 +2557,31 @@ impl<'a> Parser<'a> {
                     }
                     kw @ Keyword::LEFT | kw @ Keyword::RIGHT | kw @ Keyword::FULL => {
                         let _ = self.next_token();
-                        let _ = self.parse_keyword(Keyword::OUTER);
+                        let next_kw = self.parse_one_of_keywords(&[Keyword::OUTER, Keyword::ANTI, Keyword::SEMI]);
                         self.expect_keyword(Keyword::JOIN)?;
                         match kw {
-                            Keyword::LEFT => JoinOperator::LeftOuter,
+                            Keyword::LEFT => {
+                                match next_kw {
+                                    Some(Keyword::ANTI) => JoinOperator::Anti,
+                                    Some(Keyword::SEMI) => JoinOperator::Semi,
+                                    _ => JoinOperator::LeftOuter
+                                }
+                            },
                             Keyword::RIGHT => JoinOperator::RightOuter,
                             Keyword::FULL => JoinOperator::FullOuter,
                             _ => unreachable!(),
                         }
-                    }
+                    },
+                    kw @ Keyword::ANTI | kw @ Keyword::SEMI => {
+                        let _ = self.next_token();
+                        let _ = self.parse_keyword(kw);
+                        self.expect_keyword(Keyword::JOIN)?;
+                        match kw {
+                            Keyword::ANTI => JoinOperator::Anti,
+                            Keyword::SEMI => JoinOperator::Semi,
+                            _ => unreachable!()
+                        }
+                    },
                     Keyword::OUTER => {
                         return self.expected("LEFT, RIGHT, or FULL", self.peek_token());
                     }
