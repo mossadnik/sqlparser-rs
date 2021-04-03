@@ -17,7 +17,7 @@ pub struct SparkDialect {}
 
 impl Dialect for SparkDialect {
     fn is_delimited_identifier_start(&self, ch: char) -> bool {
-        (ch == '`')
+        ch == '`'
     }
 
     fn is_identifier_start(&self, ch: char) -> bool {
